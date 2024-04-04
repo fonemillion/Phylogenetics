@@ -1,11 +1,11 @@
-# The Grow algorithm used
+# Temp solver grow
+
 
 import copy
 import time
+
 from Utils.TreeAn import reLabelTreeSet, getLeaves
 from Utils.InstanceGenerators.BiNetGenTemp import net_to_tree2, simulation_temp
-
-
 
 class Case_T3:
     def __init__(self,
@@ -39,20 +39,20 @@ class Case_T3:
 
         return new_case
 
-    def start(self,leaf):
+    def start(self, leaf):
         start_set = []
         for _ in self.tree_set:
             start_set.append(0)
         self.leaves[leaf] = start_set
         self.to_pick.remove(leaf)
 
-    def add(self,leaf):
+    def add(self, leaf):
         buddies = []
         for tree in self.tree_set:
             for bud in self.leaves:
                 if leaf in self.label[self.leaves[bud][tree]]:
                     children = list(self.tree_set[tree].successors(self.leaves[bud][tree]))
-                    inter = len(self.label[children[0]] & {bud,leaf})
+                    inter = len(self.label[children[0]] & {bud, leaf})
                     if inter == 1:
                         buddies.append(bud)
                         break
@@ -60,7 +60,7 @@ class Case_T3:
                         return None
         return buddies
 
-    def grow(self,leaf,buddies):
+    def grow(self, leaf, buddies):
         new_set = []
 
         for tree in range(len(self.tree_set)):
@@ -71,99 +71,67 @@ class Case_T3:
                 if leaf in self.label[child]:
                     new_set.append(child)
 
-        self.weight += len(set(buddies))-1
+        self.weight = len(set(buddies)) - 1
         self.leaves[leaf] = new_set
 
         self.to_pick.remove(leaf)
         self.sol.append(leaf)
 
 
-
-
-def rBranch(tree_set):
-
-    nr_tree = len(tree_set)
-    nr_leaves = len(getLeaves(tree_set[0]))
-    # print(nr_tree * nr_leaves)
+def TempSolver_3(tree_set):
     main_case = Case_T3(tree_set)
-    todo = dict()
-    for i in range(nr_tree * nr_leaves):
-        todo[i] = []
-
-    # print(todo)
+    todo = []
+    sol = []
 
     for leaf in main_case.to_pick:
         new_case = main_case.copy()
         new_case.start(leaf)
-        todo[0].append(new_case)
-
+        todo.append(new_case)
 
     checked = []
-    for _ in range(len(getLeaves(tree_set[0]))+2):
+
+    for _ in range(len(getLeaves(tree_set[0])) + 2):
         checked.append([])
 
-    done = []
-    for _ in range(len(getLeaves(tree_set[0])) + 2):
-        done.append(set())
-
-
     while len(todo) > 0:
-        s_key = min(todo.keys())
+        # I+=1
+        case = todo.pop()
 
-        while len(todo[s_key]) > 0:
+        if len(case.to_pick) == 0:
+            sol = case.sol
+            return sol
 
-            case = todo[s_key].pop() # get subproblem min weight
+        for leaf in case.to_pick:
+            buddies = case.add(leaf)
+            if buddies is not None:
+                new_set = case.to_pick.copy()
+                new_set.remove(leaf)
+                if new_set in checked[len(new_set)]:
+                    continue
+                else:
+                    checked[len(new_set)].append(new_set)
 
-            if len(case.to_pick) == 0: # check done
-                return case.weight, case.sol
-
-            leaf_set = tuple(case.to_pick)
-            if leaf_set in done[len(leaf_set)]:
-                continue
-            else:
-                done[len(leaf_set)].add(leaf_set)
-
-
-
-            for leaf in case.to_pick:
-                buddies = case.add(leaf)
-                if buddies is not None:
-                    new_leaf_set = case.to_pick.copy()
-                    new_leaf_set.remove(leaf)
-
-                    if tuple(new_leaf_set) in done[len(new_leaf_set)]:
-                        continue
-
-                    new_case = case.copy()
-                    new_case.grow(leaf, buddies)
-                    # print(new_case.weight)
-                    todo[new_case.weight].append(new_case)
-
-        # print('del', s_key)
-        del todo[s_key]
-
+                new_case = case.copy()
+                new_case.grow(leaf, buddies)
+                todo.append(new_case)
 
     # print(I)
-    return -1, []
-
+    return sol
 
 
 if __name__ == '__main__':
+
     R = 10
-    L = 25
+    L = 30
     T = 10
-    for i in range(10):
-        net, _ = simulation_temp(L, R)
-        treeSet = net_to_tree2(net, T)
+    net, _ = simulation_temp(L, R)
+    treeSet = net_to_tree2(net, T)
 
+    reLabelTreeSet(treeSet)
+    print('----------------')
 
-        reLabelTreeSet(treeSet)
-        print(i, '----------------')
-
-        start = time.time()
-        copyset = copy.deepcopy(treeSet)
-        print(rBranch(copyset))
-        eind = time.time()
-        print(eind-start)
-
+    start = time.time()
+    print(TempSolver_3(treeSet))
+    eind = time.time()
+    print(eind - start)
 

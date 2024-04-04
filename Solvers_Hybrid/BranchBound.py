@@ -1,12 +1,12 @@
+# The Branch and Bound algorithms used
+
+
+
 import copy
-import pickle
 import random
 import time
-
-from Utils.TreeAn import reLabelTreeSet, getLeaves, showGraph, getRoot
+from Utils.TreeAn import reLabelTreeSet, getLeaves, getRoot
 import networkx as nx
-
-
 from Utils.InstanceGenerators.BiNetGenTemp import net_to_tree2, simulation_temp
 
 class Case_T:
@@ -696,7 +696,7 @@ def BB4(tree_set, isTree=True, ub = None):
 
 if __name__ == '__main__':
     R = 10
-    L = 25
+    L = 30
     T = 10
     for i in range(10):
 
